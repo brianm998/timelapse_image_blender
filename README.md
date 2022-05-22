@@ -8,18 +8,30 @@ The input sequence for the blender should be a set of tif images rendered from t
 raw camera files.  This application does not do raw to tif or jpeg conversion.
 
 This input sequence should be in a directory that is named for the sequence, and should be
-the only contentents of that sequence.
+the only contentents of that directory.
 
 Multiple blending modes are supported.  For each mode, an output image sequence is created
 from the input image sequence.  Each output frame is computed by blending one or more of
 the input frames in some manner.  The different blending modes differ in how and when they
 apply these blends.
 
-The goal is to allow parts of a timelapse video that have lots of motion, like nearby water,
-to be smoothed out like can be done with longer exosures.
+The goal is to allow parts of a timelapse video that have more motion than desired,
+like nearby water, to be smoothed out, similar to using longer exposures for the entire
+timelapse sequence.
 
-Another application is introducting star trails to overnight timelapses.
+My intial insipration for this was some footage I captured from Mono Lake in California
+during the daytime, less than a meter from the surface of the water.  With a 2 second
+expsoure time for the clouds, the water was much chopper than I would like.  This became
+especially apparent when I was assembling a music video transition from day to night
+at the same location.  The night time exposure was 20 seconds, and I liked the look of the
+water a lot more there.  After writing this, I've applied a bell-curve blend to the water
+during both the night and the daytime, using video editng with the original video and the
+blended video to choose which parts of the final video are blended and which parts are not.
 
+Another usage of this application is introducting star trails to overnight timelapses.
+
+I used this effect in the same music video as well, I wrote the trail-streak blender for
+a quick 'what?' moment to appear out of nowhere.
 
 ## Installation
 
@@ -32,7 +44,7 @@ on the command line from the application directory.
 
 It can be added to your path, or invoked from some other directory with a full pathname.
 
-There are a number of dependencies.  The application will not startup properly with out them.
+There are a number of dependencies.  The application will not startup properly without them.
 
 Timelapse Image Blender uses some 3rd party perl modules, and some 3rd party command line tools.
 
@@ -67,7 +79,7 @@ Here is a basic invocation of the application:
 timelapse_image_blender bell-curve --size 7 --max 10 --min 1 --sequence /tmp/LRT_a7riiia_100_test
 ```
 
-Running like so will produce this output directory,
+Running like so will produce this output directory:
 
 ```
 /tmp/LRT_a7riiia_100_test-bell-curve-7-way-hi-10-lo-1-merge
@@ -111,6 +123,9 @@ which results in a blend for a specific output frame like this:
 into
 	/tmp/LRT_a7riiia_100_test-bell-curve-7-way-hi-10-lo-1-merge/LRT_00039.tif
 ```
+
+Listed above is the blend percentage of the output frame that is applied to each input frame,
+along with the weights given to calculate these.  
 
 These parameters can be adjusted to your liking, and can be previewd without lengthly rendering
 by using the --info-only global command line arg.  When run in this mode, the application
