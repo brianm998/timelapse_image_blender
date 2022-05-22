@@ -35,6 +35,8 @@ use MaxChildren;
 Timelapse::validate();
 ImageBlender::validate();
 Exiftool::validate();
+  # we need exiftool
+
 
 
 # improvements:
@@ -93,15 +95,15 @@ my $max_children = MaxChildren->new("/tmp/timelapse_image_blender_max_children.t
 
 # figure out what blender we should use
 my $blender = undef;
-my $action = undef;
+my $blender_name = undef;
 
-# pull off any global args before the action,
-# check to see if any args are an action by using the blenders map
+# pull off any global args before the blender name,
+# check to see if any args are a blender name by using the blenders map
 # this ends when we've either got a blender or run out of args.
 while($blender == undef && scalar(@ARGV) > 0) {
-  $action = shift;
+  $blender_name = shift;
 
-  $blender = $blenders->{$action};
+  $blender = $blenders->{$blender_name};
 }
 
 if (defined $blender) {
@@ -136,14 +138,14 @@ if (defined $blender) {
     print "\n$usage\n";
   }
 } else {
-  # no action arg on command line
-  print "no defined blender for '$action'\n\n";
+  # no blender name on command line
+  print "no defined blender for '$blender_name'\n\n";
   usage();
 }
 
 sub usage() {
   print <<END
-usage: $0 [ global args ] action [ action specific args ]
+usage: $0 [ global args ] blender [ action specific args ]
 
  global args:
 
@@ -151,15 +153,15 @@ usage: $0 [ global args ] action [ action specific args ]
    --max-children value    - max number of children processes default is number of cpus
    --no-video              - don't render a video, don't remove the output image sequence
 
-where action is one of:
+where blender is one of:
 
 END
 ;
 
   foreach my $blender (@blenders) {
-    my $action = $blender->{name};
+    my $blender_name = $blender->{name};
     my $desc = $blender->description();
-    print " - $action:\n\n";
+    print " - $blender_name:\n\n";
     print "$desc\n";
   }
 }
