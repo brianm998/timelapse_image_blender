@@ -5,10 +5,8 @@ use Exiftool;
 use Log qw(logSystem);
 use ImageBlender;
 
-# this is the prefix that we put on the front
+# this is the prefix that we put on the front of newly created images for the output sequence
 our $SEQUENCE_IMAGE_PREFIX = "LRT_";
-
-our @EXPORT = qw($SEQUENCE_IMAGE_PREFIX);
 
 sub validate() {
   # we need ffmpeg
@@ -48,12 +46,15 @@ sub render($) {
   my $image_width = $exif->{ImageWidth};
   my $image_height = $exif->{ImageHeight};
 
-  # XXX calculate aspect ratio from width/height
-  
+  # calculate aspect ratio from width/height
+  my $aspect_ratio = get_aspect_ratio($image_width, $image_height);
+
   my $output_video_filename = $image_sequence_dirname;
 
-  # XXX this doesn't work anymore :(
-  $output_video_filename =~ s/$SEQUENCE_IMAGE_PREFIX//; # XXX lrt
+  # remove the sequence image prefex if it happens to be part of the video filename
+  $output_video_filename =~ s/$SEQUENCE_IMAGE_PREFIX//;
+
+  # prepend the format and file extention to the end of the filename
   $output_video_filename .= "_ProRes-444_Rec.709F_OriRes_30_UHQ.mov";
 
   if(-e $output_video_filename) {
@@ -61,9 +62,7 @@ sub render($) {
   } else {
     # render
     # full res, ProRes high quality
-    # XXX LRT XXX
-    # XXX hardcoded aspect ratio
-    my $ffmpeg_cmd = "ffmpeg -y -r 30 -analyzeduration 2147483647 -probesize 2147483647 -i $image_sequence_dirname/$SEQUENCE_IMAGE_PREFIX%05d.tif -aspect 3:2 -filter_complex \"crop=floor(iw/2)*2:floor(ih/2)*2,zscale=rangein=full:range=full:matrixin=709:matrix=709:primariesin=709:primaries=709:transferin=709:transfer=709:w=$image_width:h=$image_height,setsar=sar=1/1\" -c:v prores_ks -pix_fmt yuv444p10le -threads 0 -profile:v 4 -vendor apl0 -movflags +write_colr -an -color_range 2 -color_primaries bt709 -colorspace bt709 -color_trc bt709 -r 30 $output_video_filename";
+    my $ffmpeg_cmd = "ffmpeg -y -r 30 -analyzeduration 2147483647 -probesize 2147483647 -i $image_sequence_dirname/$SEQUENCE_IMAGE_PREFIX%05d.tif -aspect $aspect_ratio -filter_complex \"crop=floor(iw/2)*2:floor(ih/2)*2,zscale=rangein=full:range=full:matrixin=709:matrix=709:primariesin=709:primaries=709:transferin=709:transfer=709:w=$image_width:h=$image_height,setsar=sar=1/1\" -c:v prores_ks -pix_fmt yuv444p10le -threads 0 -profile:v 4 -vendor apl0 -movflags +write_colr -an -color_range 2 -color_primaries bt709 -colorspace bt709 -color_trc bt709 -r 30 $output_video_filename";
 
     if (logSystem($ffmpeg_cmd) == 0) {
       print("render worked, removing image sequence dir\n");
@@ -167,6 +166,38 @@ sub read_dir($) {
   return $source_file_list;
 }
 
+sub get_aspect_ratio($$) {
+  my ($width, $height) = @_;
+
+  my $ratio_width = $width/$height;
+  my $ratio_height = 1;
+
+  if (is_int($ratio_width)) {
+    return "$ratio_width/$ratio_height";
+  } else {
+    # need to multiply
+    my ($a, $b) = recurse_to_find_integers($ratio_width, $ratio_height, 2);
+    return "$a/$b" if(defined $a && defined $b);
+    return "$width/$height";	# unable to find integers, return original values
+  }
+}
+
+sub recurse_to_find_integers($$$) {
+  my ($left, $right, $multiplier) = @_;
+
+  if(is_int($left*$multiplier) && is_int($right*$multiplier)) {
+    return ($left*$multiplier, $right*$multiplier);
+  } else {
+    return undef if($multiplier > 1000);
+    return recurse_to_find_integers($left, $right, $multiplier+1);
+  }
+}
+
+sub is_int($) {
+  my ($value) = @_;
+
+  return $value == int $value;
+}
 
 1;
 

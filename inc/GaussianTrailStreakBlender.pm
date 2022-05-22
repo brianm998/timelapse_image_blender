@@ -1,7 +1,7 @@
 package GaussianTrailStreakBlender;
 
 use strict;
-use Timelapse qw(SEQUENCE_IMAGE_PREFIX);
+use Timelapse;
 use LinearCurve;
 use Getopt::Long;
 
