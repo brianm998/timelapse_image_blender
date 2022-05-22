@@ -3,7 +3,8 @@ package ImageBlender;
 use strict;
 use POSIX ":sys_wait_h";
 use WeightedImage;
-use TimelapseExiftool qw(logSystem timeLog);
+use TimelapseExiftool;
+use Log qw(logSystem timeLog);
 use Term::ANSIColor qw(:constants);
 
 sub validate() {

@@ -1,7 +1,8 @@
 package Timelapse;
 
 use strict;
-use TimelapseExiftool qw(logSystem);
+use TimelapseExiftool;
+use Log qw(logSystem);
 use ImageBlender;
 
 # this is the prefix that we put on the front

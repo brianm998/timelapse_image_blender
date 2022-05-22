@@ -21,6 +21,7 @@ use lib "${script_dir}/inc";
 
 # so we can use these custom modules
 use TimelapseExiftool;
+use Log qw(timeLog);
 use Timelapse;
 use GaussianBellCurve;
 use GaussianTransition;
@@ -115,7 +116,7 @@ if (defined $blender) {
   unless(defined $parse_error) {
     # our blender has successfully parsed the command line args
 
-    TimelapseExiftool::timeLog("running with ",$max_children->currentValue()," max children");
+    timeLog("running with ",$max_children->currentValue()," max children");
     $blender->{max_children} = $max_children;
 
     if ($logging_only) {
