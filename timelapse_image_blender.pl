@@ -27,7 +27,7 @@ use ImageBlender;
 use LinearBlender;
 use BellCurveBlender;
 use SmoothRampBlender;
-use GaussianTrailStreakBlender;
+use TrailStreakBlender;
 use MaxChildren;
 
 # if we get past this validation, then all of our dependent services are present
@@ -55,7 +55,7 @@ my @blenders =
    LinearBlender->new(),
    BellCurveBlender->new(),
    SmoothRampBlender->new(),
-   GaussianTrailStreakBlender->new(),
+   TrailStreakBlender->new(),
   );
 
 # map of name to blender instance

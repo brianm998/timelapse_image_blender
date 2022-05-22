@@ -1,4 +1,4 @@
-package GaussianTrailStreakBlender;
+package TrailStreakBlender;
 
 use strict;
 use Timelapse;
@@ -6,11 +6,15 @@ use LinearCurve;
 use Getopt::Long;
 use Forker;
 
+# This between blender produces an effect between the given start and end frames.
+# After start, the video appears to have a trail of streaking until mid, where it
+# starts to shrink back to end.
+
 sub new {
   my ($class) = @_;
   my $self =
     {
-     name => 'streak'		# XXX change thisx
+     name => 'trail-streak'
     };
 
   return bless $self, $class;
