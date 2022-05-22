@@ -1,4 +1,4 @@
-package GaussianBellCurveBlender;
+package BellCurveBlender;
 
 use strict;
 use Timelapse;

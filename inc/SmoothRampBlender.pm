@@ -1,4 +1,4 @@
-package GaussianTrailBlender;
+package SmoothRampBlender;
 
 use strict;
 use Timelapse;

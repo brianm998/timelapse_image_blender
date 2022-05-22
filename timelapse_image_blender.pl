@@ -25,8 +25,8 @@ use Log qw(timeLog);
 use Timelapse;
 use ImageBlender;
 use LinearBlender;
-use GaussianBellCurveBlender;
-use GaussianTrailBlender;
+use BellCurveBlender;
+use SmoothRampBlender;
 use GaussianTrailStreakBlender;
 use MaxChildren;
 
@@ -53,8 +53,8 @@ Exiftool::validate();
 my @blenders =
   (
    LinearBlender->new(),
-   GaussianBellCurveBlender->new(),
-   GaussianTrailBlender->new(),
+   BellCurveBlender->new(),
+   SmoothRampBlender->new(),
    GaussianTrailStreakBlender->new(),
   );
 
