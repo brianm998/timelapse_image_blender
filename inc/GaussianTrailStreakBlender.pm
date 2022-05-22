@@ -4,6 +4,7 @@ use strict;
 use Timelapse;
 use LinearCurve;
 use Getopt::Long;
+use Forker;
 
 sub new {
   my ($class) = @_;
@@ -271,7 +272,7 @@ sub gaussian_trail_streak() {
 
   if($should_run) {
     # then fork and do them in parallel
-    ImageBlender::run_job_list($image_blender_list, $max_children);
+    Forker::run($image_blender_list, $max_children);
 
     return $new_dirname;
   }

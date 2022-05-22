@@ -6,6 +6,13 @@ use WeightedImage;
 use Log qw(logSystem timeLog);
 use Term::ANSIColor qw(:constants);
 
+# This class takes a list of source frames as WeightedImage objects,
+# and blends them into the given output_filename.
+# The main work here is constructing the single convert commandline which
+# blends the given source frames according to their given weights into the output file.
+# This is all run as a single command.
+
+# this class doesn't work without the convert command from imagemagick
 sub validate() {
   # we need convert (ImageMagick)
 
@@ -21,12 +28,13 @@ END
     unless(system("which convert >/dev/null") == 0);
 }
 
+# construct a new instance with a given output filename, and empty list of source images
 sub new {
   my ($class, $output_filename) = @_;
   my $self =
     {
-     'output_filename', $output_filename,
-     'image_list', [],
+     'output_filename', $output_filename, # the filename to write the blended image to
+     'image_list', [],		# a list of WeightedImage objects
     };
 
   return bless $self, $class;
@@ -35,11 +43,10 @@ sub new {
 sub numberOfImages() {
   my ($self) = @_;
 
-  my $ret = scalar(@{$self->{image_list}});
-  #print "fuck '$ret'\n";
-  return $ret;
+  return scalar(@{$self->{image_list}});
 }
 
+# pull the next image off the list
 sub nextImage() {
   my ($self) = @_;
 
@@ -68,6 +75,7 @@ sub add() {
   $self->addImage(WeightedImage->new($filename, $weight));
 }
 
+# this is here so that ImageBlender adheres to what Forker needs to run it
 sub execute() {
   my ($self) = @_;
 
@@ -169,106 +177,6 @@ sub ln_or_cp() {
   }
 
   return 0;
-}
-
-# takes a list of jobs to run
-# forks per job up to $max_children to speed things up
-sub run_job_list($$) {
-  my ($job_list, $max_children) = @_;
-
-  my $idx = 0;			# index into $job_list
-
-  my @child_pids = ();
-
-  local $SIG{CHLD} = "IGNORE";
-  my $pid;
-
-  # process each set of images to blend
-  # logging in the following loop is considered harmful to performance
-  while($idx < scalar(@$job_list)) {
-    # attempt to invoke a unix process fork to process each frame
-
-    my $current_max = $max_children->currentValue();
-
-    if (!defined($pid = fork())) {
-      # fork returned undef, so unsuccessful
-      die "Cannot fork a child: $!";
-    } elsif ($pid == 0) {
-      # forked to child here
-      # grab the list of images to blend
-      my $image_blender = $job_list->[$idx];
-      $image_blender->execute();
-      # now $output_filename should exist
-      exit;			# child is done
-    } else {
-      # parent code here
-
-      # keep track of the pid we just forked
-      push @child_pids, $pid;
-
-      # next child will merge images for the next output frame
-      $idx++;
-
-      # check to see if we have too many children
-      while (scalar(@child_pids) >= $max_children->currentValue()) {
-	my $should_sleep = 1;
-	for my $child_pid (@child_pids) {
-	  my $ret = waitpid($child_pid, WNOHANG);
-	  if ($ret != 0) {
-	    # $child_pid is no longer running
-
-	    # remove $child_pid from @child_pids
-
-	    my $child_pid_idx = undef;
-	    for (my $i = 0 ; $i < scalar(@child_pids) ; $i++) {
-	      if ($child_pids[$i] == $child_pid) {
-		$child_pid_idx = $i;
-		last;
-	      }
-	    }
-	    if (defined $child_pid_idx) {
-	      # remove the finished pid from the list
-	      splice(@child_pids, $child_pid_idx, 1);
-	      # don't sleep, as @child_pids is now below $max_children
-	      $should_sleep = 0;
-	    } else {
-	      die "shit\n";	# XXX un-shit this
-	    }
-	  }
-	}
-	if($should_sleep) {
-	  # here all of our children are working, and we're at max
-	  sleep 1;
-	}
-      }
-    }
-  }
-
-  timeLog("all children started");
-
-  # here we've forked separate processes to blend each output frame,
-  # however it's likely that they're not all done yet
-
-  # check here to make sure our children are done
-  while (scalar(@child_pids) > 0) {
-    timeLog("still have ",scalar(@child_pids)," children running");
-    for my $child_pid (@child_pids) {
-      my $ret = waitpid($child_pid, 0);
-      if($ret != 0) {
-	# XXX this could be a function, same code is above
-	my $child_pid_idx = undef;
-	for (my $i = 0 ; $i < scalar(@child_pids) ; $i++) {
-	  if ($child_pids[$i] == $child_pid) {
-	    $child_pid_idx = $i;
-	    last;
-	  }
-	}
-	if (defined $child_pid_idx) {
-	  splice(@child_pids, $child_pid_idx, 1);
-	}
-      }
-    }
-  }
 }
 
 sub logImageBlenderList($) {

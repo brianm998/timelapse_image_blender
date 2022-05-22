@@ -4,6 +4,7 @@ use strict;
 use Exiftool;
 use Log qw(logSystem);
 use ImageBlender;
+use Forker;
 
 # this is the prefix that we put on the front of newly created images for the output sequence
 our $SEQUENCE_IMAGE_PREFIX = "LRT_";
@@ -25,6 +26,7 @@ END
 
 # this renders an image sequence from the given dirname into a video file
 # for now, just full resolution ProRes high quality
+# if successful, the filename of the rendered video is returned
 sub render($) {
   my ($image_sequence_dirname) = @_;
 
@@ -72,17 +74,17 @@ sub render($) {
   }
 }
 
-
-# blends the sequence in $source_dirname so that each image is blended gaussianly
-# with $merge_frame_size images, except for those at the edges, which will be
-# blended with at least half that many.
+# blends the sequence in $source_dirname so that each image is blended with
+# the given weight curve across $merge_frame_size images, except for those
+# at the edges, which will be blended with at least half that many.
+# the merge frame is centered on each output frame.
 sub curve_blend($$$$$$) {
-  my ($merge_frame_size,
-      $weight_curve,
-      $source_dirname,
-      $max_children,
-      $should_run,
-      $should_log) = @_;
+  my ($merge_frame_size,	# integer giving the size of the blending window
+      $weight_curve,		# weight curve object
+      $source_dirname,		# dirname of the source image sequence
+      $max_children,		# max children object
+      $should_run,		# boolean should actually or not
+      $should_log) = @_;	# boolean should log blending curves for each output frame
 
   my $curve_name = $weight_curve->{name};
   my $curve_blender_name = $weight_curve->{blender};
@@ -102,8 +104,6 @@ sub curve_blend($$$$$$) {
   }
 
   my $source_file_list = &Timelapse::read_dir($source_dirname);
-
-  #print "got ",join(", ", sort @source_file_list)," files\n";
 
   my $image_blender_list = [];
 
@@ -137,7 +137,7 @@ sub curve_blend($$$$$$) {
   # then fork and blend them gaussianly in parallel
 
   if($should_run) {
-      ImageBlender::run_job_list($image_blender_list, $max_children);
+      Forker::run($image_blender_list, $max_children);
 
       return $new_dirname;
   }
