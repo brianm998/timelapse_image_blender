@@ -63,19 +63,22 @@ Once fully installed, the user will get a detailed usage statement upon running 
 
 Here is a basic invocation of the application:
 
-```timelapse_image_blender bell-curve --size 7 --max 10 --min 1 --sequence /tmp/LRT_a7riiia_100_test
+```
+timelapse_image_blender bell-curve --size 7 --max 10 --min 1 --sequence /tmp/LRT_a7riiia_100_test
 ```
 
 Running like so will produce this output directory,
 
-```/tmp/LRT_a7riiia_100_test-bell-curve-7-way-hi-10-lo-1-merge
+```
+/tmp/LRT_a7riiia_100_test-bell-curve-7-way-hi-10-lo-1-merge
 ```
 
 which will contain an image sequence with the same number of images as the input sequence.
 
 It will then render that output directory into a video file named: 
 
-```a7riiia_100_test-bell-curve-7-way-hi-10-lo-1-merge.mov
+```
+a7riiia_100_test-bell-curve-7-way-hi-10-lo-1-merge.mov
 ```
 
 as a full resolution high quality ProRes quicktime file.
