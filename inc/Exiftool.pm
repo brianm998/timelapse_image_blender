@@ -1,9 +1,8 @@
-package TimelapseExiftool;
+package Exiftool;
 
-use Term::ANSIColor qw(:constants);
 use Text::CSV qw( csv );
 
-$Term::ANSIColor::AUTORESET = 1;
+# I realize that exiftool is written in perl, can probably just use it directly
 
 sub validate() {
   # we need exiftool
@@ -20,20 +19,10 @@ END
     unless(system("which exiftool >/dev/null") == 0);
 }
 
-sub new {
-  my ($class) = @_;
-
-  my $base = { };
-
-  return bless $base, $class;
-}
-
 # returns a basic map of the exiftool output for the given filename
-sub run_exiftool() {
-  my ($self, $filename) = @_;
+sub run($) {
+  my ($filename) = @_;
   my $ret = {};
-
-  #  open my $fh, "exiftool -csv $filename |";
 
   my $csv = Text::CSV->new ({ binary => 1, auto_diag => 1 });
   open my $fh, "exiftool -csv $filename |" or die $!;

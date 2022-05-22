@@ -20,7 +20,7 @@ BEGIN { $script_dir = Cwd::realpath( File::Basename::dirname(__FILE__)) }
 use lib "${script_dir}/inc";
 
 # so we can use these custom modules
-use TimelapseExiftool;
+use Exiftool;
 use Log qw(timeLog);
 use Timelapse;
 use GaussianBellCurve;
@@ -38,7 +38,7 @@ use MaxChildren;
 # if not, then the user should be shown what's missing, and ideally how to install it
 Timelapse::validate();
 ImageBlender::validate();
-TimelapseExiftool::validate();
+Exiftool::validate();
 
 
 # improvements:

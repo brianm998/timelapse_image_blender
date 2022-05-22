@@ -1,7 +1,7 @@
 package Timelapse;
 
 use strict;
-use TimelapseExiftool;
+use Exiftool;
 use Log qw(logSystem);
 use ImageBlender;
 
@@ -43,11 +43,13 @@ sub render($) {
 
   closedir $source_dir;
 
-  my $exif = TimelapseExiftool->new->run_exiftool("$image_sequence_dirname/$test_image");
+  my $exif = Exiftool::run("$image_sequence_dirname/$test_image");
 
   my $image_width = $exif->{ImageWidth};
   my $image_height = $exif->{ImageHeight};
 
+  # XXX calculate aspect ratio from width/height
+  
   my $output_video_filename = $image_sequence_dirname;
 
   # XXX this doesn't work anymore :(
