@@ -3,7 +3,7 @@ package ImageBlender;
 use strict;
 use POSIX ":sys_wait_h";
 use WeightedImage;
-use TimelapseExiftool;
+use TimelapseExiftool qw(logSystem timeLog);
 use Term::ANSIColor qw(:constants);
 
 sub validate() {
@@ -85,7 +85,7 @@ sub blend_images() {
 
   my @FF = map { $_->description($total_weight); } @{$self->{image_list}};
 
-  TimelapseExiftool::timeLog(
+  timeLog(
       MAGENTA, "blending ", BLUE, ,$self->numberOfImages(),
       " images:\n\t",RESET, join("\n\t", @FF),MAGENTA,
       "\ninto\n\t", BLUE,$self->{output_filename}, "\n", RESET
@@ -144,7 +144,7 @@ sub blend_images() {
 
   $cmd .= $self->{output_filename};
 
-  TimelapseExiftool::timeLog("starting render of ", $self->{output_filename});
+  timeLog("starting render of ", $self->{output_filename});
 
   my $start_time = time;
 
@@ -155,7 +155,7 @@ sub blend_images() {
 
   my $end_time = time;
 
-  TimelapseExiftool::timeLog("render of ", $self->{output_filename}, " complete, took ",($end_time-$start_time), " seconds");
+  timeLog("render of ", $self->{output_filename}, " complete, took ",($end_time-$start_time), " seconds");
 }
 
 # try to make a hard link instead of copying
@@ -163,9 +163,9 @@ sub ln_or_cp() {
   my($source_file, $dest_file) = @_;
 
   # if both are on same filesystem, ln will work, and is a fast metadata update.
-  unless(TimelapseExiftool::logSystem("ln $source_file $dest_file") == 0) {
+  unless(logSystem("ln $source_file $dest_file") == 0) {
     # if ln fails, then just go ahead and copy it.  Slower, but should work.
-    return TimelapseExiftool::logSystem("cp $source_file $dest_file")
+    return logSystem("cp $source_file $dest_file")
   }
 
   return 0;
@@ -244,14 +244,14 @@ sub run_job_list($$) {
     }
   }
 
-  TimelapseExiftool::timeLog("all children started");
+  timeLog("all children started");
 
   # here we've forked separate processes to blend each output frame,
   # however it's likely that they're not all done yet
 
   # check here to make sure our children are done
   while (scalar(@child_pids) > 0) {
-    TimelapseExiftool::timeLog("still have ",scalar(@child_pids)," children running");
+    timeLog("still have ",scalar(@child_pids)," children running");
     for my $child_pid (@child_pids) {
       my $ret = waitpid($child_pid, 0);
       if($ret != 0) {

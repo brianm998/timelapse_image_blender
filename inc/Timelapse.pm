@@ -1,7 +1,7 @@
 package Timelapse;
 
 use strict;
-use TimelapseExiftool;
+use TimelapseExiftool qw(logSystem);
 use ImageBlender;
 
 # this is the prefix that we put on the front
@@ -62,7 +62,7 @@ sub render($) {
     # XXX hardcoded aspect ratio
     my $ffmpeg_cmd = "ffmpeg -y -r 30 -analyzeduration 2147483647 -probesize 2147483647 -i $image_sequence_dirname/$SEQUENCE_IMAGE_PREFIX%05d.tif -aspect 3:2 -filter_complex \"crop=floor(iw/2)*2:floor(ih/2)*2,zscale=rangein=full:range=full:matrixin=709:matrix=709:primariesin=709:primaries=709:transferin=709:transfer=709:w=$image_width:h=$image_height,setsar=sar=1/1\" -c:v prores_ks -pix_fmt yuv444p10le -threads 0 -profile:v 4 -vendor apl0 -movflags +write_colr -an -color_range 2 -color_primaries bt709 -colorspace bt709 -color_trc bt709 -r 30 $output_video_filename";
 
-    if (TimelapseExiftool::logSystem($ffmpeg_cmd) == 0) {
+    if (logSystem($ffmpeg_cmd) == 0) {
       print("render worked, removing image sequence dir\n");
       return $output_video_filename;
     } else {

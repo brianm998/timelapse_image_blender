@@ -1,7 +1,12 @@
 package TimelapseExiftool;
 
+require Exporter;
+
 use Term::ANSIColor qw(:constants);
 use Text::CSV qw( csv );
+
+our @ISA = qw(Exporter);
+our @EXPORT_OK = qw(timeLog logSystem);
 
 $Term::ANSIColor::AUTORESET = 1;
 
