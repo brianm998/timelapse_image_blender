@@ -20,7 +20,6 @@ sub logSystem {
   my $d = `date "+%r"`;
   chomp $d;
   print YELLOW, "      $d", RESET, " - ", MAGENTA, "exec", RESET, ": ", BLUE "$cmd\n";
-#  die "$!\n" if($ret != 0);
 
   return system($cmd);
 }

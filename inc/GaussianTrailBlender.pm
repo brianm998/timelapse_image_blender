@@ -4,6 +4,7 @@ use strict;
 use Timelapse;
 use LinearCurve;
 use Getopt::Long;
+use GaussianTransition;
 
 sub new {
   my ($class) = @_;

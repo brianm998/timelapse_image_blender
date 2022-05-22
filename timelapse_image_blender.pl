@@ -23,11 +23,7 @@ use lib "${script_dir}/inc";
 use Exiftool;
 use Log qw(timeLog);
 use Timelapse;
-use GaussianBellCurve;
-use GaussianTransition;
-use LinearCurve;
 use ImageBlender;
-use WeightedImage;
 use LinearBlender;
 use GaussianBellCurveBlender;
 use GaussianTrailBlender;
@@ -81,8 +77,6 @@ my $default_max_children = $cpu->count;
 
 # get global opts from a different array so @ARGV stays virgin
 my @pargv = @ARGV;
-# XXX got an error from GetOptions here, need to not pass stuff pass the action
-
 my $old_warn = $SIG{__WARN__};
 $SIG{__WARN__} = sub { };	# supress warnings about other args
 GetOptionsFromArray(\@pargv,
