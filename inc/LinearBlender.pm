@@ -51,6 +51,8 @@ sub parseArgs($) {
   return "missing required args" unless(defined $merge_frame_size &&
 					defined $source_dirname);
 
+  $source_dirname =~ s~/$~~; # remove any possible trailing slash from the source dirname
+  
   $self->{merge_frame_size} = $merge_frame_size;
   $self->{source_dirname} = $source_dirname;
 

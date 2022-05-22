@@ -100,6 +100,8 @@ sub parseArgs($) {
   return "invalid fade out percentage $fade_out_percentage"
     unless($fade_out_percentage > 0 && $fade_out_percentage < 100);
 
+  $source_dirname =~ s~/$~~; # remove any possible trailing slash from the source dirname
+  
   $self->{start_blend_index} = $start_blend_index;
   $self->{mid_blend_index} = $mid_blend_index;
   $self->{end_blend_index} = $end_blend_index;

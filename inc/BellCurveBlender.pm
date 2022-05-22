@@ -70,6 +70,8 @@ sub parseArgs($) {
   return "max_value $max_value is greated than min_value $min_value\n"
     if($max_value <= $min_value);
 
+  $source_dirname =~ s~/$~~; # remove any possible trailing slash from the source dirname
+  
   $self->{merge_frame_size} = $merge_frame_size;
   $self->{source_dirname} = $source_dirname;
   $self->{max_value} = $max_value;
