@@ -34,7 +34,7 @@ sub new {
   my $self =
     {
      'output_filename', $output_filename, # the filename to write the blended image to
-     'image_list', [],		# a list of WeightedImage objects
+     'image_list', [],		          # a list of WeightedImage objects
     };
 
   return bless $self, $class;
@@ -126,9 +126,9 @@ sub blend_images() {
   $cmd .= $image_1->{filename};
   $cmd .= " ";
   $cmd .= $image_2->{filename};
-  $cmd .= " -compose blend -define compose:args=$percentage_1"."x"."$percentage_2  -composite ";
+  $cmd .= " -compose blend -define compose:args=$percentage_1"."x"."$percentage_2 -composite ";
 
-  my $previous_weight = $weight_1+$weight_2;
+  my $previous_weight = $weight_1+$weight_2; # running count of the already blended weight
 
   # any subsequent images need to be added to the command line individually
   while($self->numberOfImages() > 0) {
@@ -142,6 +142,7 @@ sub blend_images() {
     my $next_image_blend_percentage = $next_weight / ($next_weight + $previous_weight) * 100;
     my $previous_blend_percentage = $previous_weight / ($next_weight + $previous_weight) * 100;
 
+    # the convert command expects each subsequent blend to be added like this
     $cmd .= $next_image->{filename};
     $cmd .= " -compose blend -define compose:args=";
     $cmd .= $next_image_blend_percentage."x".$previous_blend_percentage;
@@ -150,6 +151,7 @@ sub blend_images() {
     $previous_weight += $next_weight;
   }
 
+  # finally tack on the output filename as the last arg to convert
   $cmd .= $self->{output_filename};
 
   timeLog("starting render of ", $self->{output_filename});
