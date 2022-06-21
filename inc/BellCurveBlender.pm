@@ -95,52 +95,58 @@ sub parseArgs($) {
   return undef;
 }
 
+sub extract_frames($) {
+  my ($input_video_filename) = @_;
+  # when processing a video, first we need to extract the individual frames
+  # and then we set the source_dirname based upon that
+
+  timeLog("extracting frames from $input_video_filename");
+
+  my $output_dir = $input_video_filename;
+  $output_dir =~ s~/[^/]+$~~;
+  $output_dir = "" if($output_dir eq $input_video_filename); # using cwd
+
+  my $source_dirname =
+    Timelapse::extract_image_sequence_from_video($input_video_filename,
+						 $output_dir,
+						 "LRT_", # XXX constant
+						 "tif"); # XXX constant
+
+  if (defined $source_dirname) {
+    timeLog("using source_dirname $source_dirname");
+    return $source_dirname;
+
+  } else {
+    die "failure :(\n";		# XXX make this better
+  }
+}
+
 sub blendSequence() {
   my ($self) = @_;
 
   my $should_delete_source_dirname_after_blend = 0;
 
   unless(exists $self->{source_dirname}) {
-    # XXX extract this logic to elsewhere
-
-    # when processing a video, first we need to extract the individual frames
-    # and then we set the source_dirname based upon that
-
     my $input_video_filename = $self->{input_video_filename};
-
     die("no 'source_dirname' or 'input_video_filename' defined\n")
-      unless(defined $input_video_filename);
-
-    timeLog("extracting frames from $input_video_filename");
-
-    my $output_dir = $input_video_filename;
-    $output_dir =~ s~/[^/]+$~~;
-    $output_dir = "" if($output_dir eq $input_video_filename); # using cwd
-    timeLog("output_dir $output_dir");
-    my $source_dirname =
-      Timelapse::extract_image_sequence_from_video($input_video_filename,
-						   $output_dir,
-						   "LRT_", # XXX constant
-						   "tif"); # XXX constant
+      unless (defined $input_video_filename);
 
     timeLog("extracting metadata from $input_video_filename");
     $self->{exif} = Exiftool::run($input_video_filename);
-    # XXX actually use this for the rendered video
 
-    # XXX extract information for re-encoding it later, so we can 'match source'
-    # - frame rate
-    # - codec
-    # - color space
-    # - other stuff
+  # XXX actually use this for the rendered video
 
-    if(defined $source_dirname) {
-      timeLog("using source_dirname $source_dirname");
-      $self->{source_dirname} = $source_dirname;
+  # XXX extract information for re-encoding it later, so we can 'match source'
+  # - frame rate
+  # - codec
+  # - color space
+  # - other stuff
 
-      $should_delete_source_dirname_after_blend = 1;
-    } else {
-      die "failure :(\n";	# XXX make this better
-    }
+    my $extracted_dir = extract_frames($input_video_filename);
+    die "failure to extract $input_video_filename\n" unless(defined $extracted_dir);
+    $self->{source_dirname} = $extracted_dir;
+
+    $should_delete_source_dirname_after_blend = 1;
   }
 
   $self->{blended_sequence_dirname} =
@@ -176,7 +182,7 @@ sub renderVideo() {
   # render the blended image sequence into a video file
   my $newly_blended_sequence_dirname = $self->{blended_sequence_dirname};
   if(defined $newly_blended_sequence_dirname) {
-    my $video_filename = Timelapse::render($newly_blended_sequence_dirname);
+    my $video_filename = Timelapse::render($newly_blended_sequence_dirname, $self->{exif});
     if(defined $video_filename) {
       $self->{video_filename} = $video_filename;
       return 1;

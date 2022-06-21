@@ -27,8 +27,8 @@ END
 # this renders an image sequence from the given dirname into a video file
 # for now, just full resolution ProRes high quality
 # if successful, the filename of the rendered video is returned
-sub render($) {
-  my ($image_sequence_dirname) = @_;
+sub render($$) {
+  my ($image_sequence_dirname, $exif) = @_;
 
   opendir my $source_dir, $image_sequence_dirname or die "cannot open source dir $image_sequence_dirname: $!\n";
 
@@ -40,19 +40,19 @@ sub render($) {
     $test_image = $filename;
     last;
   }
- 
+
   closedir $source_dir;
 
   # XXX handle error here
   my $exif = Exiftool::run("$image_sequence_dirname/$test_image");
-     
+
   my $image_width = $exif->{ImageWidth};
   my $image_height = $exif->{ImageHeight};
 
   if($image_width == 0 || $image_height == 0) {
       # XXX problem
   }
-  
+
   # calculate aspect ratio from width/height
   my $aspect_ratio = get_aspect_ratio($image_width, $image_height);
 
@@ -69,7 +69,16 @@ sub render($) {
   } else {
     # render
     # full res, ProRes high quality
-    my $ffmpeg_cmd = "ffmpeg -y -r 30 -i $image_sequence_dirname/$SEQUENCE_IMAGE_PREFIX%05d.tif -aspect $aspect_ratio -c:v prores_ks -pix_fmt yuv444p10le -threads 0 -profile:v 4 -movflags +write_colr -an -color_range 2 -color_primaries bt709 -colorspace bt709 -color_trc bt709 -r 30 $output_video_filename";
+    my $ffmpeg_cmd = "ffmpeg -y -r 30 -i $image_sequence_dirname/$SEQUENCE_IMAGE_PREFIX%05d.tif -aspect $aspect_ratio -c:v prores_ks -pix_fmt yuv444p10le -threads 0 -profile:v 4 -movflags +write_colr -an -color_range 2 -color_primaries bt709 -colorspace bt709 -color_trc bt709 -r 30 ";
+
+    # add exif
+    foreach my $exif_key (keys %$exif) {
+      my $exif_value = $exif->{$exif_key};
+      $ffmpeg_cmd .= "-metadata '$exif_key=$exif_value' ";
+    }
+
+    $ffmpeg_cmd .= $output_video_filename;
+
     if (logSystem($ffmpeg_cmd) == 0) {
       print("render worked, removing image sequence dir\n");
       return $output_video_filename;
