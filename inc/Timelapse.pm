@@ -2,7 +2,7 @@ package Timelapse;
 
 use strict;
 use Exiftool;
-use Log qw(logSystem);
+use Log qw(logSystem timeLog);
 use ImageBlender;
 use Forker;
 
@@ -40,14 +40,19 @@ sub render($) {
     $test_image = $filename;
     last;
   }
-
+ 
   closedir $source_dir;
 
+  # XXX handle error here
   my $exif = Exiftool::run("$image_sequence_dirname/$test_image");
-
+     
   my $image_width = $exif->{ImageWidth};
   my $image_height = $exif->{ImageHeight};
 
+  if($image_width == 0 || $image_height == 0) {
+      # XXX problem
+  }
+  
   # calculate aspect ratio from width/height
   my $aspect_ratio = get_aspect_ratio($image_width, $image_height);
 
@@ -95,9 +100,9 @@ sub curve_blend($$$$$$) {
   $new_dirname =~ s/[.]/_/g;	# change dots in floating point numbers to underscores
 
   if (-d $new_dirname) {
-    print "$new_dirname already exists, cannot proceed\n";
-    print "\t run\n  rm -rf $new_dirname\n\t to continue\n";
-    exit;
+    print "$new_dirname already exists, trying to finish\n";
+    print "\t run\n  rm -rf $new_dirname\n\t to remove and start over \n";
+#    exit;
   } elsif($should_run) {
     # make the new output dir
     mkdir $new_dirname || die "$!\n";
@@ -109,7 +114,13 @@ sub curve_blend($$$$$$) {
 
   for (my $i = 0 ; $i < scalar(@$source_file_list) ; $i++) {
     my $images_to_blend = [];
+
+    # start index to center
     my $start_index = int($i-$merge_frame_size/2) + 1; # XXX related to start @ 1?
+
+    # XXX here we could also allow a different start index,
+    # i.e. an enum of LEFT, RIGHT, and CENTER n
+
     for (my $j = 0 ; $j < $merge_frame_size ; $j++) {
       my $idx = $start_index+$j;
       # ignore frames in our blend window that go off the ends fo the sequence
@@ -126,10 +137,12 @@ sub curve_blend($$$$$$) {
     # is LRT necessary here vv ?
     my $filename = sprintf("$SEQUENCE_IMAGE_PREFIX%05d.tif", $i+1); # XXX start at 1
 
-    my $image_blender = ImageBlender->new("$new_dirname/$filename");
-    $image_blender->setImageList($images_to_blend);
+    unless(-e "$new_dirname/$filename") {
+      my $image_blender = ImageBlender->new("$new_dirname/$filename");
+      $image_blender->setImageList($images_to_blend);
 
-    push @$image_blender_list, $image_blender;
+      push @$image_blender_list, $image_blender;
+    }
   }
 
   ImageBlender::logImageBlenderList($image_blender_list) if($should_log);
@@ -174,6 +187,7 @@ sub get_aspect_ratio($$) {
   if (is_int($ratio_width)) {
     return "$ratio_width/$ratio_height";
   } else {
+    # not sure we need ints here
     # need to multiply
     my ($a, $b) = recurse_to_find_integers($ratio_width, $ratio_height, 2);
     return "$a/$b" if(defined $a && defined $b);
@@ -196,6 +210,28 @@ sub is_int($) {
   my ($value) = @_;
 
   return $value == int $value;
+}
+
+sub extract_image_sequence_from_video($$$$) {
+  my ($video_filename, $output_dir, $img_prefix, $image_type) = @_;
+
+  my $output_dirname = $video_filename;
+  if($video_filename =~ m~/([^/]+)$~) {
+    $output_dirname = $1;	# remove path
+  }
+
+  timeLog("foo output_dirname $output_dirname");
+  timeLog("bar output_dir $output_dir");
+  $output_dirname =~ s/[.][^.]+$//; # remove any file extension
+
+
+  $output_dirname = "$output_dir/$output_dirname" if($output_dir ne "");
+
+  mkdir $output_dirname;	# errors?
+
+  logSystem("ffmpeg -i $video_filename $output_dirname/$img_prefix"."%05d.$image_type");
+
+  return $output_dirname;	# the dirname of the image sequence
 }
 
 1;
