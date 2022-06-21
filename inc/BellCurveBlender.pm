@@ -39,6 +39,7 @@ usage for the $name blender:
 
    --size n             - the size of the blend window in frames
    --sequence directory - the name of the directory containing the input image sequence
+   --input-video file   - the name of the input video file to process
    --max n              - weight at top of bell curve, optional defaults to 10
    --min n              - weight at edges of bell curve, optional, defaults to 1
 END
@@ -133,8 +134,6 @@ sub blendSequence() {
 
     timeLog("extracting metadata from $input_video_filename");
     $self->{exif} = Exiftool::run($input_video_filename);
-
-  # XXX actually use this for the rendered video
 
   # XXX extract information for re-encoding it later, so we can 'match source'
   # - frame rate
