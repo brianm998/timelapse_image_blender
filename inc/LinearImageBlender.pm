@@ -1,5 +1,6 @@
 package LinearImageBlender;
 
+use Log qw(logSystem timeLog);
 use strict;
 
 sub new {
@@ -27,7 +28,7 @@ sub new {
 			    $source_dirname,
 			    $max_children);
 
-  print "rendered video file $video_filename\n";
+  timeLog("rendered video file $video_filename\n");
 
   my $self =
     {

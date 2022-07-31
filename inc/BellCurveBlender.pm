@@ -22,7 +22,7 @@ sub description() {
   return <<END
    The $name blender blends the input frames for each output frame
    with a gaussian bell curve.  The frame in the middle of the input frame
-   sequence for each output frame will be weighted with the max value give.
+   sequence for each output frame will be weighted with the max value given.
    The frames at the ends of the input frame sequence will be weighted with
    the min value given.  Use an odd size argument to see these values match
    exactly.
@@ -156,9 +156,13 @@ sub blendSequence() {
 			   1,	# run
 			   0);	# don't log
 
-  if($should_delete_source_dirname_after_blend) {
-    logSystem("rm -rf $self->{source_dirname}");
-  }
+  timeLog "got blended dirname $self->{blended_sequence_dirname}\n";
+
+  if(defined $self->{blended_sequence_dirname} &&
+     $should_delete_source_dirname_after_blend)
+    {
+      logSystem("rm -rf $self->{source_dirname}");
+    }
 }
 
 sub logBlendInfo() {
@@ -181,13 +185,18 @@ sub renderVideo() {
   # render the blended image sequence into a video file
   my $newly_blended_sequence_dirname = $self->{blended_sequence_dirname};
   if(defined $newly_blended_sequence_dirname) {
-    my $video_filename = Timelapse::render($newly_blended_sequence_dirname, $self->{exif});
+
+    my $append_video_type_to_filename = !defined $self->{input_video_filename};
+
+    my $video_filename = Timelapse::render($newly_blended_sequence_dirname,
+					   $self->{exif},
+					   $append_video_type_to_filename);
     if(defined $video_filename) {
       $self->{video_filename} = $video_filename;
-      return 1;
+      return $video_filename;
     }
   }
-  return 0;
+  return undef;
 }
 
 sub deleteBelendedImageSequence() {
@@ -195,7 +204,7 @@ sub deleteBelendedImageSequence() {
 
   my $dirname_to_delete = $self->{blended_sequence_dirname};
   if(defined $dirname_to_delete) {
-    system("rm -rf $dirname_to_delete");
+    logSystem("rm -rf $dirname_to_delete");
   }
 }
 

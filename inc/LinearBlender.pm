@@ -92,13 +92,14 @@ sub renderVideo() {
   my $newly_blended_sequence_dirname = $self->{blended_sequence_dirname};
   if(defined $newly_blended_sequence_dirname) {
     my $exif = {};		# XXX fix this
-    my $video_filename = Timelapse::render($newly_blended_sequence_dirname, $exif);
+    my $video_filename = Timelapse::render($newly_blended_sequence_dirname,
+					   $exif, 1);
     if(defined $video_filename) {
       $self->{video_filename} = $video_filename;
-      return 1;
+      return $video_filename;
     }
   }
-  return 0;
+  return undef;
 }
 
 sub deleteBelendedImageSequence() {

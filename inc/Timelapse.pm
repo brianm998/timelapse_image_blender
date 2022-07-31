@@ -27,8 +27,8 @@ END
 # this renders an image sequence from the given dirname into a video file
 # for now, just full resolution ProRes high quality
 # if successful, the filename of the rendered video is returned
-sub render($$) {
-  my ($image_sequence_dirname, $exif) = @_;
+sub render($$$) {
+  my ($image_sequence_dirname, $exif, $append_video_type_to_filename) = @_;
 
   opendir my $source_dir, $image_sequence_dirname or die "cannot open source dir $image_sequence_dirname: $!\n";
 
@@ -62,14 +62,22 @@ sub render($$) {
   $output_video_filename =~ s/$SEQUENCE_IMAGE_PREFIX//;
 
   # prepend the format and file extention to the end of the filename
-  $output_video_filename .= "_ProRes-444_Rec.709F_OriRes_30_UHQ.mov";
+  # XXX this looks wonly when starting with a video:
+  # 05_30_2022-a7sii-1-aurora-topaz_ProRes-444_Rec_709F_OriRes_30_UHQ-bell-curve-3-way-hi-10-lo-1-merge_ProRes-444_Rec.709F_OriRes_30_UHQ.mov
+
+  if($append_video_type_to_filename) {
+    $output_video_filename .= "_ProRes-444_Rec.709F_OriRes_30_UHQ.mov"
+  } else {
+    $output_video_filename .= ".mov"
+  }
 
   if(-e $output_video_filename) {
-    print("$output_video_filename already exists, cannot render\n");
+    timeLog("$output_video_filename already exists, cannot render\n");
+    return undef;
   } else {
     # render
     # full res, ProRes high quality
-    my $ffmpeg_cmd = "ffmpeg -y -r 30 -i $image_sequence_dirname/$SEQUENCE_IMAGE_PREFIX%05d.tif -aspect $aspect_ratio -c:v prores_ks -pix_fmt yuv444p10le -threads 0 -profile:v 4 -movflags +write_colr -an -color_range 2 -color_primaries bt709 -colorspace bt709 -color_trc bt709 -r 30 ";
+    my $ffmpeg_cmd = "ffmpeg -y -r 30 -i $image_sequence_dirname/$SEQUENCE_IMAGE_PREFIX%05d.tif -aspect $aspect_ratio -c:v prores_ks -pix_fmt yuv444p10le -threads 0 -profile:v 4 -movflags +write_colr -an -color_range 2 -color_primaries bt709 -colorspace bt709 -color_trc bt709 ";
 
     # add exif
     foreach my $exif_key (keys %$exif) {
@@ -80,10 +88,10 @@ sub render($$) {
     $ffmpeg_cmd .= $output_video_filename;
 
     if (logSystem($ffmpeg_cmd) == 0) {
-      print("render worked, removing image sequence dir\n");
+      timeLog("render worked, removing image sequence dir\n");
       return $output_video_filename;
     } else {
-      print("render failed :("); # why?
+      timeLog("render failed :("); # why?
     }
   }
 }
