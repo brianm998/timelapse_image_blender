@@ -50,7 +50,7 @@ sub render($$$) {
   my $image_height = $exif->{ImageHeight};
 
   if($image_width == 0 || $image_height == 0) {
-      # XXX problem
+      # XXX unhandled problem
   }
 
   # calculate aspect ratio from width/height
@@ -62,7 +62,7 @@ sub render($$$) {
   $output_video_filename =~ s/$SEQUENCE_IMAGE_PREFIX//;
 
   # prepend the format and file extention to the end of the filename
-  # XXX this looks wonly when starting with a video:
+  # XXX this looks wonky when starting with a video:
   # 05_30_2022-a7sii-1-aurora-topaz_ProRes-444_Rec_709F_OriRes_30_UHQ-bell-curve-3-way-hi-10-lo-1-merge_ProRes-444_Rec.709F_OriRes_30_UHQ.mov
 
   if($append_video_type_to_filename) {
@@ -88,7 +88,7 @@ sub render($$$) {
     $ffmpeg_cmd .= $output_video_filename;
 
     if (logSystem($ffmpeg_cmd) == 0) {
-      timeLog("render worked, removing image sequence dir\n");
+      timeLog("render worked\n");
       return $output_video_filename;
     } else {
       timeLog("render failed :("); # why?
@@ -251,5 +251,30 @@ sub extract_image_sequence_from_video($$$$) {
   return $output_dirname;	# the dirname of the image sequence
 }
 
+sub extract_frames($) {
+  my ($input_video_filename) = @_;
+  # when processing a video, first we need to extract the individual frames
+  # and then we set the source_dirname based upon that
+
+  timeLog("extracting frames from $input_video_filename");
+
+  my $output_dir = $input_video_filename;
+  $output_dir =~ s~/[^/]+$~~;
+  $output_dir = "" if($output_dir eq $input_video_filename); # using cwd
+
+  my $source_dirname =
+      extract_image_sequence_from_video($input_video_filename,
+				    $output_dir,
+				    "LRT_", # XXX constant
+				    "tif"); # XXX constant
+
+  if (defined $source_dirname) {
+    timeLog("using source_dirname $source_dirname");
+    return $source_dirname;
+
+  } else {
+    die "failure :(\n";		# XXX make this better
+  }
+}
 1;
 

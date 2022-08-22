@@ -96,31 +96,6 @@ sub parseArgs($) {
   return undef;
 }
 
-sub extract_frames($) {
-  my ($input_video_filename) = @_;
-  # when processing a video, first we need to extract the individual frames
-  # and then we set the source_dirname based upon that
-
-  timeLog("extracting frames from $input_video_filename");
-
-  my $output_dir = $input_video_filename;
-  $output_dir =~ s~/[^/]+$~~;
-  $output_dir = "" if($output_dir eq $input_video_filename); # using cwd
-
-  my $source_dirname =
-    Timelapse::extract_image_sequence_from_video($input_video_filename,
-						 $output_dir,
-						 "LRT_", # XXX constant
-						 "tif"); # XXX constant
-
-  if (defined $source_dirname) {
-    timeLog("using source_dirname $source_dirname");
-    return $source_dirname;
-
-  } else {
-    die "failure :(\n";		# XXX make this better
-  }
-}
 
 sub blendSequence() {
   my ($self) = @_;
@@ -141,7 +116,7 @@ sub blendSequence() {
   # - color space
   # - other stuff
 
-    my $extracted_dir = extract_frames($input_video_filename);
+    my $extracted_dir = Timelapse::extract_frames($input_video_filename);
     die "failure to extract $input_video_filename\n" unless(defined $extracted_dir);
     $self->{source_dirname} = $extracted_dir;
 

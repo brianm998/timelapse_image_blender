@@ -1,0 +1,34 @@
+#!/usr/bin/perl
+
+# this script turns directory of .tiff files into a ProRes video
+# could also import exif
+# could export reading encoding information to enable re-encoding the same way
+# add option to delete source dir 
+
+use strict;
+use File::Basename;
+use Cwd;
+
+my $script_dir;	# figure out where this running script exists on disk
+BEGIN { $script_dir = Cwd::realpath( File::Basename::dirname(__FILE__)) }
+
+# add this dir to the include path
+use lib "${script_dir}/inc";
+use Timelapse;
+
+my $image_sequence_dirname = shift;
+my $exif = undef;
+my $append_video_type_to_filename = 0;
+
+if (defined $image_sequence_dirname) {
+
+  my $rendered_video_filename =
+    Timelapse::render($image_sequence_dirname,
+		      $exif,
+		      $append_video_type_to_filename);
+
+  print "rendered video $rendered_video_filename\n";
+
+} else {
+  die "MISSING USAGE HERE\n";
+}

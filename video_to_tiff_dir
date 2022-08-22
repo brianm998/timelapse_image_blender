@@ -1,0 +1,27 @@
+#!/usr/bin/perl
+
+# this script turns a video into a new directory of .tiff files
+# could also export exif
+# could export encoding information to enable re-encoding the same way
+
+use strict;
+use File::Basename;
+use Cwd;
+
+my $script_dir;	# figure out where this running script exists on disk
+BEGIN { $script_dir = Cwd::realpath( File::Basename::dirname(__FILE__)) }
+
+# add this dir to the include path
+use lib "${script_dir}/inc";
+use Timelapse;
+
+my $video_filename = shift;
+
+if(defined $video_filename) {
+  my $output_dirname = Timelapse::extract_frames($video_filename);
+  print "extracted frames into $output_dirname\n";
+} else {
+  die "MISSING USAGE HERE\n";
+}
+
+
